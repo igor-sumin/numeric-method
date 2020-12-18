@@ -29,7 +29,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 		QMainWindow.__init__(self)
 		self.setupUi(self)
 
-		self.setWindowTitle("Жесткая система")
+		self.setWindowTitle("Жесткая система / Ксения Белова, Игорь Сумин")
 
 		self.initUi()
 		self.widgetAdjust()
@@ -87,8 +87,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 		# Настраиваем label'ы
 		for item, text in zip(
-			[self.label_n, self.label_h, self.label_xmin], 
-			['n - количество шагов:', 'h - шаг интегрирования:', 'X<sub>min</sub> - начальная координата x:']):
+			[self.label_n, self.label_h, self.label_eps], ['кол-во шагов:', 'шаг интегр-ния:', 'eps - параметр контроля лок. погрешности']
+		):
 			self.initLab(item, self.font, text)
 
 		for item, text in zip([self.label_u0, self.label_nres, self.label_hres], \
@@ -96,20 +96,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 			self.initLab(item, self.font_bold, text)	
 
 		# Настраиваем spinBox'ы
-		for item in [self.spinBox_n, self.doubleSpinBox_xmin, self.doubleSpinBox_h]:
+		for item in [self.spinBox_n, self.doubleSpinBox_h, self.doubleSpinBox_eps]:
 			self.initSpinBox(item, self.font)
 
 		self.spinBox_n.setRange(1, 1000000)
 
-		self.doubleSpinBox_xmin.setRange(0., 1000000.)
-		self.doubleSpinBox_xmin.setSpecialValueText("0")
-		self.doubleSpinBox_xmin.setDecimals(7)
-		self.doubleSpinBox_xmin.setSingleStep(0.001)
-
 		self.doubleSpinBox_h.setRange(0., 1000000.)
 		self.doubleSpinBox_h.setSpecialValueText("0")
 		self.doubleSpinBox_h.setDecimals(7)
-		self.doubleSpinBox_h.setSingleStep(0.001)
+		self.doubleSpinBox_h.setSingleStep(0.00001)
+
+		self.doubleSpinBox_eps.setRange(0., 1000000.)
+		self.doubleSpinBox_eps.setSpecialValueText("0")
+		self.doubleSpinBox_eps.setDecimals(7)
+		self.doubleSpinBox_eps.setSingleStep(0.00001)
 
 		# Настраиваем кнопки
 		for item, text in zip([self.button_numeric, self.button_exact, self.button_eps, self.button_numeric_exact, self.button_descr], \
@@ -125,14 +125,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 		self.MplGraph.setMaximumSize(1200, 800)
 		self.MplGraph.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
+		# Настраиваем radioBox
+		self.checkBox_lp.setText('Считаем с локальной погрешностью?')
+		self.checkBox_lp.setFont(self.font_bold)
+
 		# Добавляем виджеты
 		self.hlayout_res.addWidget(self.label_u0, alignment=QtCore.Qt.AlignCenter)
 		self.hlayout_res.addWidget(self.label_nres, alignment=QtCore.Qt.AlignCenter)
 		self.hlayout_res.addWidget(self.label_hres, alignment=QtCore.Qt.AlignCenter)
+		self.lay_rr.addWidget(self.button_descr, alignment=QtCore.Qt.AlignCenter)
+		self.lay_rr.addWidget(self.checkBox_lp, alignment=QtCore.Qt.AlignCenter)
+
+
 
 		# Вызываем начальные функции построения
 		self.emptyGraph()
 		self.emptyTable()
+
 
 	# Показать описание задачи
 	def showDescr(self):
@@ -148,23 +157,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 		self.n = self.spinBox_n.value()
 		self.h = self.doubleSpinBox_h.value()
-		self.xmin = self.doubleSpinBox_xmin.value()
+		self.eps = self.doubleSpinBox_eps.value()
+		self.f = False if self.checkBox_lp.isChecked() else True
 
-		self.result = RigidSystem(self.n, self.h, self.xmin)
+		self.result = RigidSystem(self.n, self.h, self.eps, self.f)
 		self.ndata = self.result.output()
 
 		t = ' ' * 50
 
-		# ['n', 'x', 'u(1)', 'u(2)', 'v(1)', 'v(2)', 'exp(-1000*x)', 'exp(-0.01*x)', 'E(1)', 'E(2)']
+		# ['n', 'x', 'h', 'u(1)', 'u(2)', 'v(1)', 'v(2)', 'exp(-1000*x)', 'exp(-0.01*x)', '|ОЛП(1)|', '|ОЛП(2)|', 'c1', 'c2' 'E(1)', 'E(2)']
 		text = source.text() + ' жестокой системы ОДУ'
 		if source.text() == 'Численное решение':
-			self.plotGraph(self.ndata.iloc[:, 4:6], text)
+			self.plotGraph(self.ndata.iloc[:, 5:7], text)
 		elif source.text() == 'Точное решение':
-			self.plotGraph(self.ndata.iloc[:, 2:4], text)
+			self.plotGraph(self.ndata.iloc[:, 3:5], text)
 		elif source.text() == 'Глобальная погрешность':
 			self.plotGraph(self.ndata.iloc[:, -2:], text)
 		elif source.text() == 'Точное и численное решение':
-			self.plotGraphSub(self.ndata.iloc[:, 2:4], self.ndata.iloc[:, 4:6], t + text)
+			self.plotGraphSub(self.ndata.iloc[:, 3:5], self.ndata.iloc[:, 5:7], t + text)
 		else:
 			raise Exception()
 
@@ -246,7 +256,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 	# создаем пустую таблицу
 	def emptyTable(self):
-		columns = ['n', 'x', 'u(1)', 'u(2)', 'v(1)', 'v(2)', 'exp(-1000*x)', 'exp(-0.01*x)', 'E(1)', 'E(2)']
+		columns = ['n', 'x', 'h', 'u(1)', 'u(2)', 'v(1)', 'v(2)', 'exp(-1000*x)', 'exp(-0.01*x)', '|ОЛП|(1)', '|ОЛП|(2)', 'c1', 'c2', 'E(1)', 'E(2)']
 		ndata = pd.DataFrame(columns=columns)
 
 		self.emptyTable = PdTable(self, ndata)

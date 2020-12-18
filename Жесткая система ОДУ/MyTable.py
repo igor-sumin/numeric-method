@@ -42,23 +42,34 @@ class PdTable(QWidget):
 		parent.PdTable.setColumnWidth(0, parent.PdTable.width() // 24)
 		parent.PdTable.setColumnWidth(1, parent.PdTable.width() // 8)
 		parent.PdTable.setColumnWidth(2, parent.PdTable.width() // 5)
-		for i in range(3, 10):
+		for i in range(3, 11):
 			parent.PdTable.setColumnWidth(i, parent.PdTable.width() // 4)
+
+		parent.PdTable.setColumnWidth(11, parent.PdTable.width() // 20)
+		parent.PdTable.setColumnWidth(12, parent.PdTable.width() // 20)
+		parent.PdTable.setColumnWidth(13, parent.PdTable.width() // 4)
+		parent.PdTable.setColumnWidth(14, parent.PdTable.width() // 4)
+
 
 		parent.PdTable.horizontalHeader().setStretchLastSection(True)
 
 	def getToolTips(self, parent):
-		# ['n', 'x', 'u(1)', 'u(2)', 'v(1)', 'v(2)', 'exp(-1000*x)', 'exp(-0.01*x)', 'E(1)', 'E(2)']
+		# ['n', 'x', 'h', u(1)', 'u(2)', 'v(1)', 'v(2)', 'exp(-1000*x)', 'exp(-0.01*x)', '|ОЛП|(1)', '|ОЛП|(2)', 'c1', 'c2', 'E(1)', 'E(2)']
 		parent.PdTable.horizontalHeaderItem(0).setToolTip('Номер шага')
 		parent.PdTable.horizontalHeaderItem(1).setToolTip('Координата приближенной траектории, вычесленная методом РК-2 с текущим шагом')
-		parent.PdTable.horizontalHeaderItem(2).setToolTip('Координата точной траектории для 1ой компоненты (точное решение 1ой компоненты)')
-		parent.PdTable.horizontalHeaderItem(3).setToolTip('Координата точной траектории для 2ой компоненты (точное решение 2ой компоненты)')
-		parent.PdTable.horizontalHeaderItem(4).setToolTip('Координата приближенной траектории, вычисленная методом РК-2 с текущим шагом, для 1ой компоненты (численное решение 1ой компоненты)')
-		parent.PdTable.horizontalHeaderItem(5).setToolTip('Координата приближенной траектории, вычисленная методом РК-2 с текущим шагом, для 2ой компоненты (численное решение 2ой компоненты)')
-		parent.PdTable.horizontalHeaderItem(6).setToolTip('Часть точного решения, показывающая скорость изменения компоненты')
+		parent.PdTable.horizontalHeaderItem(2).setToolTip('Шаг интегрирования')
+		parent.PdTable.horizontalHeaderItem(3).setToolTip('Координата точной траектории для 1ой компоненты (точное решение 1ой компоненты)')
+		parent.PdTable.horizontalHeaderItem(4).setToolTip('Координата точной траектории для 2ой компоненты (точное решение 2ой компоненты)')
+		parent.PdTable.horizontalHeaderItem(5).setToolTip('Координата приближенной траектории, вычисленная методом РК-2 с текущим шагом, для 1ой компоненты (численное решение 1ой компоненты)')
+		parent.PdTable.horizontalHeaderItem(6).setToolTip('Координата приближенной траектории, вычисленная методом РК-2 с текущим шагом, для 2ой компоненты (численное решение 2ой компоненты)')
 		parent.PdTable.horizontalHeaderItem(7).setToolTip('Часть точного решения, показывающая скорость изменения компоненты')
-		parent.PdTable.horizontalHeaderItem(8).setToolTip('Глобальная погрешность 1ой компоненты')
-		parent.PdTable.horizontalHeaderItem(9).setToolTip('Глобальная погрешность 2ой компоненты')
+		parent.PdTable.horizontalHeaderItem(8).setToolTip('Часть точного решения, показывающая скорость изменения компоненты')
+		parent.PdTable.horizontalHeaderItem(9).setToolTip('Модуль оценки локальной погрешности для 1ой компоненты')
+		parent.PdTable.horizontalHeaderItem(10).setToolTip('Модуль оценки локальной погрешности для 2ой компоненты')
+		parent.PdTable.horizontalHeaderItem(11).setToolTip('Счетчик удвоений шага')
+		parent.PdTable.horizontalHeaderItem(12).setToolTip('Счетчик деления шага')
+		parent.PdTable.horizontalHeaderItem(13).setToolTip('Глобальная погрешность 1ой компоненты')
+		parent.PdTable.horizontalHeaderItem(14).setToolTip('Глобальная погрешность 2ой компоненты')
 
 	# Добавление стилей
 	def getStyle(self, parent):
