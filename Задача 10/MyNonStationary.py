@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 
 class NonStat:
-	def __init__(self, T_, n_, m_):
+	def __init__(self, T_, n_, m_, f_):
 		"""Нестационарное уравнение теплопроводности. Неявная схема. Задача 10"""
 
 		# участки по x, t
@@ -11,10 +11,12 @@ class NonStat:
 		self.m = m_
 		self.mode = self.m + 1
 
+		# флаг со стороны MyApp
+		self.flag = f_
+
 		# конечная температура
 		self.T = T_
 		self.a, self.b = 0, 1
-
 		self.kappa = np.array([0, 0])
 
 		# h - шаг по x
@@ -22,14 +24,10 @@ class NonStat:
 		# x - узлы сетки по x
 		self.x = [self.a + i * self.h for i in range(self.node)]
 
-		# print('h = ', self.h)
-
 		# tau - шаг по t
 		self.tau = self.T / self.m
 		# t - узлы сетки по времени
 		self.t = [j * self.tau for j in range(self.mode)]
-
-		# print('t = ', self.tau)
 
 		# gamma - коэф-т
 		self.gamma = 2
@@ -38,79 +36,42 @@ class NonStat:
 		# ui0 - начальное условие, i = 0,node
 		self.phi = lambda x: 1 - x ** 2
 
-		# u0j - ГУ 1 рода (левый уонец стержня), j = 1,mode
+		# u0j - ГУ 1 рода (левый торце стержня), j = 1,mode
 		self.mu1 = lambda t: np.cos(t)
-		# unodej - ГУ 1 рода (правый уонец стержня), j = 1,mode
+		# unodej - ГУ 1 рода (правый торце стержня), j = 1,mode
 		self.mu2 = lambda t: np.sin(4 * t)
 
 		# решетка на прямоугольнике [n, m] - матрица с узлами сетки с координатами (xi, tj), i=1,node-1; j=1,mode
 		self.u = np.empty([self.node, self.mode], dtype=np.double)
-		# print('u = ', self.u)
-		# print('shape = ', self.u.shape)
-		# print()
-		# print('x = ', self.x)
-		# print('t = ', self.t)
-		# print()
 
 		# коэф-ты для системы (13)
-		self.A = self.gamma ** 2 * self.tau / (self.h ** 2)
-		self.B = self.A
-		self.C = 1 + 2 * self.A
+		self.A = (self.gamma ** 2 * self.tau) / (self.h ** 2)
+		self.B = (self.gamma ** 2 * self.tau) / (self.h ** 2)
+		self.C = 1 + (2 * self.gamma ** 2 * self.tau) / (self.h ** 2)
 
 		self.PH = lambda i, j: self.u[i, j - 1] + self.g(self.x[i], self.t[j]) * self.tau
 
 	def numerical(self, jdx):
-		"""Построение СЛАУ трехдиагональной матрицы"""
-
-		# нижняя, главная, верхняя диагонали
-		bottom = np.diag(self.calcdiag(-1), k=-1)
-		middle = np.diag(self.calcdiag(0), k=0)
-		high = np.diag(self.calcdiag(1), k=1)
-
-		# Построим разностную схему в матричном виде: (AAvj = b)
-		AA = bottom + middle + high
-
-		# ищем b
-		b = np.concatenate((
-			[self.mu1(self.t[jdx])], [-self.PH(i, jdx) for i in range(1, self.n)], [self.mu2(self.t[jdx])]
-		))
-
 		return self.run_through(jdx)
-
-	def calcdiag(self, k):
-		if k == 0:
-			# главная диаг = 1 a1 ... an-1 1
-			return np.concatenate((
-				[1], np.full(self.n - 1, self.C), [1]
-			))
-
-		elif k == -1:
-			# нижняя диаг = a1 ... an-1 -kappa2
-			return np.concatenate((
-				np.full(self.n - 1, self.A), [-self.kappa[1]]
-			))
-		else:
-			# верхняя диаг = -kappa1 a2 ... an
-			return np.concatenate((
-				[-self.kappa[0]], np.full(self.n - 1, self.B)
-			))
-
-		assert False
 
 	def direct(self, jdx):
 		"""Прямой ход прогонки"""
 
 		# находим параметры
-		alpha = np.empty(self.node, np.double)
-		beta = np.empty(self.node, np.double)
+		alpha = np.empty(self.n, np.double)
+		beta = np.empty(self.n, np.double)
 
 		# начальное условие
 		alpha[0] = self.kappa[0]
 		beta[0] = self.mu1(self.t[jdx])
 
-		for i in range(self.node - 1):
-			alpha[i + 1] = self.B / (self.C - self.A * alpha[i])
-			beta[i + 1] = (self.PH(i, jdx) + self.A * beta[i]) / (self.C - self.A * alpha[i])
+		for i in range(1, self.n):
+			alpha[i] = self.B / (self.C - self.A * alpha[i - 1])
+			beta[i] = (self.PH(i, jdx) + self.A * beta[i - 1]) / (self.C - self.A * alpha[i - 1])
+
+		# if jdx == 1:
+		# 	for i in range(1, self.n):
+		# 		print('PHI{0}1 = {1}'.format(i, self.PH(i, jdx)))
 
 		return alpha, beta
 
@@ -120,12 +81,12 @@ class NonStat:
 		# находим численное решение
 		vj = np.empty(self.node, np.double)
 
-		# начальное и конечное условия
-		vj[0] = self.mu1(self.t[jdx])
+		#  конечное условие
 		vj[-1] = (-self.kappa[1] * beta[-1] - self.mu2(self.t[jdx])) / (self.kappa[1] * alpha[-1] - 1)
 
-		for i in range(self.node - 2, 0, -1):
-			vj[i] = alpha[i + 1] * vj[i + 1] + beta[i + 1]
+		# i = n - 1, 0
+		for i in range(self.node - 2, -1, -1):
+			vj[i] = alpha[i] * vj[i + 1] + beta[i]
 
 		return vj
 
@@ -133,10 +94,6 @@ class NonStat:
 		"""Метод прогонки"""
 		
 		alpha, beta = self.direct(jdx)
-		# print()
-		# print('alpha = ', alpha)
-		# print('beta = ', beta)
-		# print()
 		vj = self.reverse(alpha, beta, jdx)
 
 		return vj
@@ -151,11 +108,9 @@ class NonStat:
 
 		for j in range(1, self.mode):
 			# u0j
-			self.u[-1, j] = self.mu1(self.t[j])
+			self.u[self.a, j] = self.mu1(self.t[j])
 			# unj
-			self.u[self.a, j] = self.mu2(self.t[j])
-
-		# print('self = ', self.u)
+			self.u[-1, j] = self.mu2(self.t[j])
 
 		for j in range(1, self.mode):
 			self.u[:, j] = self.numerical(j)
@@ -169,21 +124,42 @@ class NonStat:
 
 		x, t = np.meshgrid(self.x, self.t)
 
-		a = sorted(list(np.arange(self.mode)) * self.node)
-		b = sorted(list(self.t) * self.node)
-		iterables = np.array([a, b])
-		index = list(pd.MultiIndex.from_arrays(iterables, names=['j', 'tj']))
-		arra = np.asarray(index)
+		# формируем всю таблицу
+		if self.flag:
+			# подготовка данных для мульти-таблицы
+			a = sorted(list(np.arange(self.mode)) * self.node)
+			b = sorted(list(self.t) * self.node)
+			iterables = np.array([a, b])
+			index = list(pd.MultiIndex.from_arrays(iterables, names=['j', 'tj']))
+			arra = np.asarray(index)
 
-		# таблица
-		df = pd.DataFrame({
-			'tj': np.around(arra[:, 1], 7), \
-			'i': list(np.arange(self.node, dtype=np.int)) * self.mode, \
-			'xi': np.around(list(self.x) * self.mode, 7), \
-			'vij': np.around(self.u.ravel(), 14)
-		})
+			# мульти-таблица
+			df = pd.DataFrame({
+				'tj':  np.around(arra[:, 1], 7), \
+				'i':   list(np.arange(self.node, dtype=np.int)) * self.mode, \
+				'xi':  np.around(list(self.x) * self.mode, 7), \
+				'vij': np.around(self.u.ravel(), 14)
+			})
 
-		# pd.set_option('display.max_rows', df.shape[0] + 1)
-		# print(df.head(50))
+			# pd.set_option('display.max_rows', df.shape[0] + 1)
+			# print(df.head(50))
+
+		else:
+			tj = np.concatenate((
+				sorted(self.node * list(np.around(self.t[:2], 7))), 
+				sorted(self.node * list(np.around(self.t[-2:], 7)))
+			))
+
+			vij = np.concatenate((
+				np.around(self.u[:2].ravel(), 14), np.around(self.u[-2:].ravel(), 14)
+			))
+
+			# мульти-таблица для 0, 1, m - 1, m слоев
+			df = pd.DataFrame({
+				'tj':  tj, \
+				'i':   4 * list(np.arange(self.node, dtype=np.int)), \
+				'xi':  np.around(4 * list(self.x), 7), \
+				'vij': vij
+			})
 
 		return np.array([x, t, self.u]), df

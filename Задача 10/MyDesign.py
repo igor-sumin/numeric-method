@@ -67,6 +67,9 @@ class Ui_MainWindow(object):
         self.lay_right.addWidget(self.MplGraph)
         self.lay_buttons = QtWidgets.QHBoxLayout()
         self.lay_buttons.setObjectName("lay_buttons")
+        self.checkBox_lays = QtWidgets.QCheckBox(self.centralwidget)
+        self.checkBox_lays.setObjectName("checkBox_lays")
+        self.lay_buttons.addWidget(self.checkBox_lays)
         self.pushButton_task = QtWidgets.QPushButton(self.centralwidget)
         self.pushButton_task.setObjectName("pushButton_task")
         self.lay_buttons.addWidget(self.pushButton_task)
@@ -93,6 +96,7 @@ class Ui_MainWindow(object):
         self.label_T.setText(_translate("MainWindow", "3"))
         self.label_n.setText(_translate("MainWindow", "1"))
         self.label_m.setText(_translate("MainWindow", "2"))
+        self.checkBox_lays.setText(_translate("MainWindow", "CheckBox"))
         self.pushButton_task.setText(_translate("MainWindow", "PushButton"))
         self.pushButton_descr.setText(_translate("MainWindow", "PushButton"))
 from MyGraph import MyGraph

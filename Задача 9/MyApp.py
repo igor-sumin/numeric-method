@@ -25,7 +25,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 		super().__init__()
 		self.setupUi(self)
 
-		self.setWindowTitle('Девятая задача')
+		self.setWindowTitle('Девятая задача / Валерия Алексеева, Игорь Сумин')
 
 		self.initUi()
 		self.widgetAdjust()
@@ -33,9 +33,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 	def initUi(self):
 		self.font = QtGui.QFont()
 		self.font.setFamily("Arial")
-		self.font.setPointSize(13)
+		self.font.setPointSize(12)
 		self.font.setBold(False)
 		self.font.setWeight(50)
+
+		self.font2 = QtGui.QFont()
+		self.font2.setFamily("Arial")
+		self.font2.setPointSize(14)
+		self.font2.setBold(False)
+		self.font2.setWeight(50)
 
 	def initLab(self, lab, font, text):
 		lab.setMaximumHeight(30)
@@ -86,7 +92,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 		lay.addWidget(dSpin, alignment=QtCore.Qt.AlignRight)
 
 	def optionN(self, lab, spin, lay):
-		spin.setRange(1, 9999999)
+		spin.setRange(1, 1000000)
 		spin.setMaximumHeight(30)
 		spin.setMinimumHeight(30)
 		spin.setFont(self.font)
@@ -101,22 +107,28 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 	def widgetAdjust(self):
 		# Настраиваем label'ы
-		par_enter = '<strong>Параметры для уравнения переменного тока:</strong>'
-		for item, text in zip([self.label_params_enter, self.label_L, self.label_R, self.label_E0, self.label_w, self.label_I0, self.label_V], \
+		par_main = '<strong>Параметры для расчета силы тока:</strong>'
+		par_top = '<strong>общие параметры для уравнения силы тока:</strong>'
+		par_center = '<strong>параметры для переменного тока:</strong>'
+		par_bottom = '<strong>параметры для тока с самоиндукцией:</strong>'
+
+		for item, text in zip([self.label_params_enter, self.label_top, self.label_center, self.label_bottom, \
+			self.label_L, self.label_R, self.label_E0, self.label_w, \
+			self.label_I0, self.label_V], \
 			[
-			par_enter, 'L - индуктивность:', 'R - сопротивление:', \
+			par_main, par_top, par_center, par_bottom, 'L - индуктивность:', 'R - сопротивление:', \
 			'E<sub>o</sub> - нач. напряженность:', 'w - угловая частота:', \
 			'I<sub>o</sub> - нач. ток:', 'V - напряжение в цепи:' \
 			]
 		):
 			self.initLab(item, self.font, text)
 
-		par_enter2 = '<strong>Параметры для расчета методом РК-3:</strong>'
+		par_enter2 = '<strong>Параметры для расчета методом Рунге-Кутты(3):</strong>'
 		for item,text in zip([self.label_params_enter2, self.label_h0, self.label_n, self.label_eps, \
-			self.label_xmin, self.label_xmax, self.label_xeps],
+			self.label_xmax, self.label_xeps],
 			[
-			par_enter2, 'h<sub>o</sub> - начальный шаг:', 'n - количество шагов:', 'eps - параметр контроля ЛП:', \
-			'X<sub>min</sub> - начальная координата x:', 'X<sub>max</sub> - конечная координата x:', 'xeps - параметр выхода на границу: '
+			par_enter2, 'h<sub>o</sub> - начальный шаг:', 'n<sub>max</sub> - максимальное количество шагов:', 'eps - параметр для контроля лок. погрешности:', \
+		 	'X<sub>max</sub> - максимальная координата x:', 'eps<sub>x</sub> - параметр выхода на границу: '
 			]
 		):
 			self.initLab(item, self.font, text)
@@ -128,7 +140,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 		):
 			self.initSpinBox(item, self.font, text)
 
-		for item in [self.doubleSpinBox_h0, self.doubleSpinBox_eps, self.doubleSpinBox_xmin, self.doubleSpinBox_xmax, self.doubleSpinBox_xeps]:
+		for item in [self.doubleSpinBox_h0, self.doubleSpinBox_eps, self.doubleSpinBox_xmax, self.doubleSpinBox_xeps]:
 			self.initSpinBox(item, self.font)
 
 		# (!) Настраиваем кнопки
@@ -146,14 +158,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 			self.myAddWidget(label, dSpin, lay)
 
 		for label, dSpin, lay in zip(
-			[self.label_h0, self.label_eps, self.label_xmin, self.label_xmax, self.label_xeps],
-			[self.doubleSpinBox_h0, self.doubleSpinBox_eps, self.doubleSpinBox_xmin, self.doubleSpinBox_xmax, self.doubleSpinBox_xeps],
-			[self.lay_h0, self.lay_eps, self.lay_xmin, self.lay_xmax, self.lay_xeps]
+			[self.label_h0, self.label_eps, self.label_xmax, self.label_xeps],
+			[self.doubleSpinBox_h0, self.doubleSpinBox_eps, self.doubleSpinBox_xmax, self.doubleSpinBox_xeps],
+			[self.lay_h0, self.lay_eps, self.lay_xmax, self.lay_xeps]
 		):
 			self.myAddWidget2(label, dSpin, lay)
 
-		self.label_params_enter.setAlignment(QtCore.Qt.AlignCenter)
 		self.label_params_enter2.setAlignment(QtCore.Qt.AlignCenter)
+
+		self.label_params_enter.setFont(self.font2)
+		self.label_params_enter2.setFont(self.font2)
 
 		# Настраиваем таблицу с данными
 		self.PdTable.setMinimumSize(400, 300)
@@ -179,7 +193,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 		""" Получить значения со спинов """
 
 		self.params_phys = np.empty(6, dtype=np.double)
-		self.params_rk = np.empty(6, dtype=np.double)
+		self.params_rk = np.empty(5, dtype=np.double)
 
 		for idx, spin in enumerate(
 			[self.doubleSpinBox_L, self.doubleSpinBox_R, self.doubleSpinBox_E0, self.doubleSpinBox_w, self.doubleSpinBox_I0, self.doubleSpinBox_V]
@@ -187,7 +201,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 			self.params_phys[idx] = spin.value()
 
 		for idx, spin in enumerate(
-			[self.doubleSpinBox_h0, self.spinBox_n, self.doubleSpinBox_eps, self.doubleSpinBox_xmin, self.doubleSpinBox_xmax, self.doubleSpinBox_xeps]
+			[self.doubleSpinBox_h0, self.spinBox_n, self.doubleSpinBox_eps, self.doubleSpinBox_xmax, self.doubleSpinBox_xeps]
 		):
 			self.params_rk[idx] = spin.value()
 
@@ -204,29 +218,29 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 	def emptyGraph(self):
 		self.MplGraph.canvas.axes.clear()
 
-		self.MplGraph.canvas.axes.set_title('Зависимость переменного синусоидального тока от времени') 
-		self.MplGraph.canvas.axes.set_ylabel('I(A) - сила тока') 
-		self.MplGraph.canvas.axes.set_xlabel('x(сек) - время')
+		self.MplGraph.canvas.axes.set_title('Зависимость переменных токов I, I1\n и тока с самоиндукцией I2 от времени x') 
+		self.MplGraph.canvas.axes.set_ylabel('I, A') 
+		self.MplGraph.canvas.axes.set_xlabel('x, c')
 
 		self.MplGraph.canvas.draw()
 
 	def plotGraph(self):
 		self.MplGraph.canvas.axes.clear()
 
-		self.MplGraph.canvas.axes.set_title('Зависимость переменного синусоидального тока от времени')
-		self.MplGraph.canvas.axes.set_ylabel('I(A) - сила тока') 
-		self.MplGraph.canvas.axes.set_xlabel('x(сек) - время')
+		self.MplGraph.canvas.axes.set_title('Зависимость переменных токов I, I1\n и тока с самоиндукцией I2 от времени x')
+		self.MplGraph.canvas.axes.set_ylabel('I, A')
+		self.MplGraph.canvas.axes.set_xlabel('x, c')
 
-		self.MplGraph.canvas.axes.plot(self.ndata['x'], self.ndata['Ij'], label='численное решение (I)')
-		self.MplGraph.canvas.axes.plot(self.ndata['x'], self.ndata['uj'], label='точное решение (u)')
-		self.MplGraph.canvas.axes.plot(self.ndata['x'], self.ndata['yj'], label='точное решение (y)')
+		self.MplGraph.canvas.axes.plot(self.ndata['x'], self.ndata['I'], label='численное решение для переменного тока')
+		self.MplGraph.canvas.axes.plot(self.ndata['x'], self.ndata['I1'], label='точное решение для переменного тока')
+		self.MplGraph.canvas.axes.plot(self.ndata['x'], self.ndata['I2'], label='точное решение для тока с самоиндукцией')
 		self.MplGraph.canvas.axes.legend(loc='best')
 
 		self.MplGraph.canvas.draw()
 
 	# создаем пустую таблицу
 	def emptyTable(self):
-		cols = ['n', 'x', 'Ij', 'I2j', 'Ij - I2j', '|ОЛП|', 'hj', 'C1', 'C2', 'uj', '| uj - Ij |', 'yj']
+		cols = ['n', 'x', 'I', 'I2n', 'I - I2n', '|ОЛП|', 'h', 'C1', 'C2', 'I1', '| I1 - I |', 'I2']
 		ndata = pd.DataFrame(columns=cols)
 
 		self.emptyTable = PdTable(self, ndata)

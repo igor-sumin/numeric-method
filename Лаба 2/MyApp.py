@@ -136,32 +136,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 		# Настраиваем таблицу с данными
 		self.PdTable.setMinimumSize(400, 300)
-		self.PdTable.setMaximumWidth(500)
+		self.PdTable.setMaximumWidth(600)
 
 		# Настраиваем графику
 		self.MplWidget.setMinimumSize(400, 300)
 		self.MplWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
 		# Настраиваем слои
-		# self.layout_button_task.addWidget(self.button_test_task, alignment=QtCore.Qt.AlignRight)
-		# self.layout_button_task.addWidget(self.button_main_task, alignment=QtCore.Qt.AlignRight)
-
-		# self.layout_buttons_and_spinbox.addWidget(self.button_test_task, alignment=QtCore.Qt.AlignCenter)
-		# self.layout_buttons_and_spinbox.addWidget(self.button_main_task, alignment=QtCore.Qt.AlignCenter)
-		# self.layout_buttons_and_spinbox.addWidget(self.label_partition, alignment=QtCore.Qt.AlignCenter)
-		# self.layout_buttons_and_spinbox.addWidget(self.spinBox_partition, alignment=QtCore.Qt.AlignCenter)
-
 		self.layout_three_labels.addWidget(self.label_eps, alignment=QtCore.Qt.AlignCenter)
 		self.layout_three_labels.addWidget(self.label_dif, alignment=QtCore.Qt.AlignCenter)
 		self.layout_three_labels.addWidget(self.label_n_partition, alignment=QtCore.Qt.AlignCenter)
-
-		# self.layout_table_other.addWidget(self.button_test_task, alignment=QtCore.Qt.AlignCenter)
-		# self.layout_table_other.addWidget(self.button_main_task, alignment=QtCore.Qt.AlignCenter)
-		# self.layout_table_other.addWidget(self.label_partition, alignment=QtCore.Qt.AlignRight)
-		# self.layout_table_other.addWidget(self.spinBox_partition, alignment=QtCore.Qt.AlignCenter)
-
-		# self.layout_spin_lab.addWidget(self.label_partition, alignment=QtCore.Qt.AlignLeft)
-		# self.layout_spin_lab.addWidget(self.spinBox_partition, alignment=QtCore.Qt.AlignLeft)
 
 		# Вызов функций построения
 		self.plot_empty_graph()
@@ -179,20 +163,51 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 		self.label_n_partition.setText('Для решения задачи на сетке было использовано <strong>{0}</strong> разбиений'.format(str(int(self.note[0]))))
 		self.label_dif.setText('Максимальное разность решения наблюдается в точке <strong>{0}</strong>'.format(str(int(self.note[2]))))
 
-		self.create_plot(self.ndata)
+		self.create_plot_main(self.ndata) if source.text() == "Решить основную задачу" else self.create_plot_test(self.ndata)
+		# (!) доработать
 		self.create_table(self.ndata)
 
-	# Построение графика по ndata
-	def create_plot(self, ndata):
+	# Построение графика по ndata (Lab_test)
+	def create_plot_test(self, ndata):
+		self.MplWidget.canvas.axes1.clear()
+		self.MplWidget.canvas.axes2.clear()
 
-		self.MplWidget.canvas.axes.clear()
-		self.MplWidget.canvas.axes.plot(ndata['x'].values, ndata['v(x)'].values, label='численное решение v(x)') 
-		self.MplWidget.canvas.axes.plot(ndata['x'].values, ndata['u(x)'].values, label='точное решение u(x)') 
-		self.MplWidget.canvas.axes.set_title('n = {0}'.format(self.n)) 
-		self.MplWidget.canvas.axes.set_xlabel('x')
-		self.MplWidget.canvas.axes.set_ylabel('v(x)') 
-		self.MplWidget.canvas.axes.legend(loc='best', fontsize=10) 
-		self.MplWidget.canvas.draw() 
+		self.MplWidget.canvas.axes1.plot(ndata['x'].values, ndata['v(x)'].values, label='численное решение v(x)')
+		self.MplWidget.canvas.axes1.plot(ndata['x'].values, ndata['u(x)'].values, label='точное решение u(x)')
+		self.MplWidget.canvas.axes2.plot(ndata['x'], ndata['|u(x) - v(x)|'], label='|u(x) - v(x)|')
+
+		self.MplWidget.canvas.axes1.set_title('График аналитического и численного решений')
+		self.MplWidget.canvas.axes1.set_ylabel('v(x), u(x)')
+		self.MplWidget.canvas.axes1.legend(loc='best', fontsize=10)
+
+		self.MplWidget.canvas.axes2.set_title('Разность аналитического и численного решения')
+		self.MplWidget.canvas.axes2.set_ylabel('|u(x) - v(x)|')
+		self.MplWidget.canvas.axes2.set_xlabel('x')
+		self.MplWidget.canvas.axes2.legend(loc='best', fontsize=10)
+
+		# self.MplWidget.canvas.figure.tight_layout()
+		self.MplWidget.canvas.draw()
+
+	# Построение графика по ndata (Lab_main)
+	def create_plot_main(self, ndata):
+		self.MplWidget.canvas.axes1.clear()
+		self.MplWidget.canvas.axes2.clear()
+
+		self.MplWidget.canvas.axes1.plot(ndata['x'].values, ndata['v(x)'].values, label='численное решение v(x)')
+		self.MplWidget.canvas.axes1.plot(ndata['x'].values, ndata['v2(x2i)'].values, label='численное решение v2(x2i)')
+		self.MplWidget.canvas.axes2.plot(ndata['x'], ndata['|v(x) - v2(x2i)|'], label='|v(x) - v2(x2i)|')
+
+		self.MplWidget.canvas.axes1.set_title('График численных решений с целым и половинным шагом')
+		self.MplWidget.canvas.axes1.set_ylabel('v(x), v2(x2i)')
+		self.MplWidget.canvas.axes1.legend(loc='best', fontsize=10)
+
+		self.MplWidget.canvas.axes2.set_title('Разность численных решений в общих узлах')
+		self.MplWidget.canvas.axes2.set_ylabel('|v(x) - v2(x2i)|')
+		self.MplWidget.canvas.axes2.set_xlabel('x')
+		self.MplWidget.canvas.axes2.legend(loc='best', fontsize=10)
+
+		# self.MplWidget.canvas.figure.tight_layout()
+		self.MplWidget.canvas.draw()
 
 	# Построение таблицы
 	def create_table(self, ndata):
@@ -200,10 +215,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 	# Построение пустого графа
 	def plot_empty_graph(self):
-		self.MplWidget.canvas.axes.clear() 
-		self.MplWidget.canvas.axes.set_title('n = ?') 
-		self.MplWidget.canvas.axes.set_xlabel('x')
-		self.MplWidget.canvas.axes.set_ylabel('v(x)') 
+		self.MplWidget.canvas.axes1.clear()
+		self.MplWidget.canvas.axes2.clear()
+
+		self.MplWidget.canvas.axes1.set_title('График решений')
+		self.MplWidget.canvas.axes1.set_ylabel('v(x), ?') 
+
+		self.MplWidget.canvas.axes2.set_title('Разность решений')
+		self.MplWidget.canvas.axes2.set_ylabel('? - ?') 
+		self.MplWidget.canvas.axes2.set_xlabel('x')
+
+		# self.MplWidget.canvas.figure.tight_layout()
 		self.MplWidget.canvas.draw()
 
 	# Построение пустой таблицы

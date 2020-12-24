@@ -57,7 +57,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 		# lab.setMinimumHeight(30)
 		lab.setMinimumWidth(150)
 		lab.setFont(font)
-		lab.setRange(-100000, 1000000)
+		lab.setRange(0, 1000000)
+		# lab.setValue(500)
 		lab.setSuffix(text)
 
 	def initBut(self, lab, font, lay, text):
@@ -76,9 +77,30 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 		lab.setMaximumHeight(30)
 		lab.setMinimumHeight(30)
+		lab.setMinimumWidth(350)
+
 		lab.setFont(font)
 		lab.setText(text)
 		
+		lab.setCursor(Qt.PointingHandCursor)
+		lab.setStyleSheet(style)
+
+	def initCheckBox(self, lab, font, text):
+		style = """
+		QCheckBox::indicator:checked {
+			background-color : #11999e;
+		}
+
+		QCheckBox::indicator:hover {
+			background-color : #30e3ca;
+		}
+		"""
+
+		lab.setText(text)
+		lab.setFont(font)
+		lab.setMaximumHeight(30)
+		lab.setMinimumHeight(30)
+
 		lab.setCursor(Qt.PointingHandCursor)
 		lab.setStyleSheet(style)
 
@@ -98,9 +120,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 		self.labels = [self.label_T, self.label_n, self.label_m]
 		self.lays = [self.lay_T, self.lay_n, self.lay_m]
 		self.spins = [self.doubleSpinBox_T, self.spinBox_n, self.spinBox_m]
-		self.spins[0].setValue(5)
-		self.spins[1].setValue(10)
-		self.spins[2].setValue(50)
 
 		for label, text in zip(self.labels, self.texts):
 			self.initLab(label, self.font, text)
@@ -109,6 +128,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 		text = ['', '', '']
 		for spins, txt in zip(self.spins, text):
 			self.initSpinBox(spins, self.font, txt)
+		self.doubleSpinBox_T.setValue(5)
+		self.spinBox_n.setValue(10)
+		self.spinBox_m.setValue(500)
 
 		# Настраиваем кнопки
 		self.initBut(self.pushButton_task, self.font, self.lay_buttons, "Получить решение")
@@ -116,9 +138,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 		self.pushButton_task.clicked.connect(self.callFunc)
 		self.pushButton_descr.clicked.connect(self.showDescr)
 
+		# Настраиваем radioBox
+		self.initCheckBox(self.checkBox_lays, self.font2, 'Выводим в таблицу все слои?')
+
 		# Настраиваем виджеты
 		for label, spin, lay in zip(self.labels, self.spins, self.lays):
 			self.myAddWidget(label, spin, lay)
+		self.lay_buttons.addWidget(self.checkBox_lays, alignment=QtCore.Qt.AlignCenter)
+		self.lay_buttons.addWidget(self.pushButton_task, alignment=QtCore.Qt.AlignCenter)
+		self.lay_buttons.addWidget(self.pushButton_descr, alignment=QtCore.Qt.AlignCenter)
+
 
 		# Настраиваем таблицу с данными
 		self.PdTable.setMaximumWidth(700)
@@ -129,7 +158,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 		# Вызываем начальные функции построения
 		self.empty3dGraph()
-		self.emptyTable()
 
 	def getsValue(self):
 		""" Получить значения со спинов """
@@ -141,11 +169,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 	def callFunc(self):
 		self.getsValue()
 
-		self.result = NonStat(*self.params)
+		self.f = True if self.checkBox_lays.isChecked() else False
+		self.result = NonStat(*self.params, self.f)
 		self.ndata, self.df = self.result.output()
 
 		self.plot3dGraph()
-		PdTable(self, self.df, self.params[1])
+		PdTable(self, self.df, self.f, self.params)
 
 	# создаем пустой график
 	def empty3dGraph(self):
@@ -167,7 +196,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 		X, Y = np.meshgrid([0], [0])
 		Z = X + Y
 		surf = self.MplGraph.canvas.axes.plot_surface(X, Y, Z, cmap='coolwarm')
-		self.MplGraph.canvas.axes.figure.colorbar(surf, shrink=0.75, aspect=20)
+		cb = self.MplGraph.canvas.axes.figure.colorbar(surf, shrink=0.75, aspect=20)
+		cb.set_label('Градиент температуры стержня')
 
 	def plot3dGraph(self):
 		self.MplGraph.canvas.axes.clear()
@@ -184,13 +214,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 		self.MplGraph.canvas.axes.set_ylabel('t - время')
 		self.MplGraph.canvas.axes.set_zlabel('u(x, t) - температура стержня')
 
-		surf = self.MplGraph.canvas.axes.plot_surface(*self.ndata, cmap='coolwarm', antialiased=False)
+		surf = self.MplGraph.canvas.axes.plot_surface(*self.ndata, rstride=self.params[1] + 1, cstride=self.params[2] + 1, \
+			antialiased=False, cmap='coolwarm')
 
 		self.MplGraph.canvas.draw()
-
-	# создаем пустую таблицу
-	def emptyTable(self):
-		cols = ['№ Слоя', 'tj', 'i', 'xi', 'vij']
-		ndata = pd.DataFrame(columns=cols)
-
-		PdTable(self, ndata)

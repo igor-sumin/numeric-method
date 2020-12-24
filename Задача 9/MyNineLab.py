@@ -5,12 +5,12 @@ import matplotlib.pyplot as plt
 class NineLab:
 	def __init__(self, params_phys, params_rk):
 		"""
-		Определение параметров для решения 9 задачи
+		Конструктор - Определение параметров для решения 9 задачи
 		"""
 
 		# Инициализация параметров
 		self.L, self.R, self.E0, self.w, self.I0, self.V = params_phys
-		self.h0, self.n, self.eps, self.xmin, self.xmax, self.xeps = params_rk
+		self.h0, self.n, self.eps, self.xmax, self.xeps = params_rk
 		print(params_rk)
 
 		# Порядок метода РК-3
@@ -28,7 +28,7 @@ class NineLab:
 		self.c1 = np.zeros(self.node, dtype=np.int)
 		self.c2 = np.zeros(self.node, dtype=np.int)
 
-		self.x[0] = self.xmin
+		self.x[0] = 0
 		self.Ij[0] = self.I0
 		self.uj[0] = self.I0
 		self.yj[0] = self.I0
@@ -164,20 +164,22 @@ class NineLab:
 		self.olp = (2 ** self.P) * self.S
 		# self.olp = self.S
 
+		# смещение шага интегрирования
+		self.h2 = np.concatenate(([0], self.h[:-1]))
+
 	def output(self):
 		""" Формирование результата """
 
 		self.algoSolution()
 
-		# допили ОЛП
-		cols = ['n', 'x', 'Ij', 'I2j', 'Ij - I2j', '|ОЛП|', 'hj', 'C1', 'C2', 'uj', '| uj - Ij |', 'yj']
+		cols = ['n', 'x', 'I', 'I2n', 'I - I2n', '|ОЛП|', 'h', 'C1', 'C2', 'I1', '| I1 - I |', 'I2']
 		ndata = pd.DataFrame({
 			cols[0]: np.arange(len(self.x)), cols[1]: np.round(self.x, len(str(self.xeps))), cols[2]: self.Ij, cols[3]: self.I2j, \
-			cols[4]: self.difIj_I2j, cols[5]: self.olp, cols[6]: self.h, cols[7]: self.c1, cols[8]: self.c2, \
+			cols[4]: self.difIj_I2j, cols[5]: self.olp, cols[6]: self.h2, cols[7]: self.c1, cols[8]: self.c2, \
 			cols[9]: self.uj, cols[10]: self.difuj_Ij, cols[11]: self.yj
 		})
 
-		# print('ndata = ', ndata)
-		# pd.set_option('display.max_rows', ndata.shape[0] + 1)
+		print('ndata = ', ndata)
+		pd.set_option('display.max_rows', ndata.shape[0] + 1)
 		
 		return ndata

@@ -22,7 +22,7 @@ class PdTable(QWidget):
 		self.createTable(parent)
 		self.resizeEvent(parent)
 		self.getStyle(parent)
-		self.getToolTips(parent)
+		# self.getToolTips(parent)
 
 	# Заполнение таблицы пришедшими данными
 	def createTable(self, parent):
@@ -39,7 +39,7 @@ class PdTable(QWidget):
 
 	# Изменение рамеров колонок таблицы
 	def resizeEvent(self, parent):
-		parent.PdTable.setColumnWidth(0, parent.PdTable.width() // 24)
+		parent.PdTable.setColumnWidth(0, parent.PdTable.width() // 12)
 		parent.PdTable.setColumnWidth(1, parent.PdTable.width() // 8)
 		parent.PdTable.setColumnWidth(2, parent.PdTable.width() // 4)
 		parent.PdTable.setColumnWidth(3, parent.PdTable.width() // 4)

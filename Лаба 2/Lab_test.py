@@ -115,18 +115,21 @@ class Lab_test:
 		self.a = np.empty(self.n, np.double)
 
 		# подсчет phi, d
+		j = 1
 		for i in range(self.n - 1):
 			if self.ksi >= self.x2[i + 1]:
-				self.phi[i] = self.f1(self.x[i])
-				self.d[i] = self.q1(self.x[i])
+				self.phi[i] = self.f1(self.x[j])
+				self.d[i] = self.q1(self.x[j])
 
 			elif self.ksi <= self.x2[i]:
-				self.phi[i] = self.f2(self.x[i])
-				self.d[i] = self.q2(self.x[i])
+				self.phi[i] = self.f2(self.x[j])
+				self.d[i] = self.q2(self.x[j])
 
 			elif self.x2[i] < self.ksi < self.x2[i + 1]:
-				self.phi[i] = (self.f1(self.x[i]) + self.f2(self.x[i])) / 2
-				self.d[i] = (self.q1(self.x[i]) + self.q2(self.x[i])) / 2
+				self.phi[i] = (self.f1(self.x[j]) + self.f2(self.x[j])) / 2
+				self.d[i] = (self.q1(self.x[j]) + self.q2(self.x[j])) / 2
+
+			j += 1
 		
 		# подсчет a
 		j = 1
@@ -150,18 +153,22 @@ class Lab_test:
 		# print("a: ", self.a)
 		# print()
 
-		# нижняя, главная, верхняя диагонали
-		bottom = np.diag(self.calcdiag(-1), k=-1)
-		middle = np.diag(self.calcdiag(0), k=0)
-		high = np.diag(self.calcdiag(1), k=1)
+		# # нижняя, главная, верхняя диагонали
+		# bottom = np.diag(self.calcdiag(-1), k=-1)
+		# middle = np.diag(self.calcdiag(0), k=0)
+		# high = np.diag(self.calcdiag(1), k=1)
 		
-		# Построим разностную схему в матричном виде: (AAv = b)
-		self.AA = bottom + middle + high
+		# # Построим разностную схему в матричном виде: (AAv = b)
+		# self.AA = bottom + middle + high
 
-		self.A = np.diag(self.AA, k=-1)[:-1]
-		self.B = np.diag(self.AA, k=1)[1:]
-		self.C = (-1) * np.diag(self.AA)[1:-1]
-		self.b = np.concatenate(([self.mu[0]], -self.phi, [self.mu[1]]))
+		# self.A = np.diag(self.AA, k=-1)[:-1]
+		# self.B = np.diag(self.AA, k=1)[1:]
+		# self.C = (-1) * np.diag(self.AA)[1:-1]
+		# self.b = np.concatenate(([self.mu[0]], -self.phi, [self.mu[1]]))
+
+		self.A = np.array([self.a[i] / (self.h ** 2) for i in range(self.n - 1)])
+		self.B = np.array([self.a[i] / (self.h ** 2) for i in range(1, self.n)])
+		self.C = np.array([self.a[i] / (self.h ** 2) + self.a[i + 1] / (self.h ** 2) + self.d[i] for i in range(self.n - 1)])
 
 		# print("C: ", self.C)
 		# print("B: ", self.B)
@@ -209,13 +216,6 @@ class Lab_test:
 
 		return alpha, beta
 
-	def difference(self):
-		"""
-		Разница численного и точного решений
-		"""
-		# print("u = ", self.u, "\nv = ", self.v)
-		return np.absolute(self.u - self.v)
-
 	def reverse(self):
 		"""
 		Обратный ход прогонки
@@ -247,14 +247,20 @@ class Lab_test:
 		Составление таблицы
 		"""
 
+		# print('xi = ', self.x)
+		# print('x2i = ', self.x2)
+		# print()
+
 		self.u = self.analytic()
 		self.v = np.concatenate(([self.mu[0]], self.numerical()))
-		self.dif = self.difference()
+
+		# Разница численного и точного решений
+		self.dif = np.absolute(self.u - self.v)
 
 		# таблица
 		ndata = pd.DataFrame({
-			'n': np.arange(self.node), 'x': np.round(self.x, len(str(self.h))), 'u(x)': np.round(self.u, 14), 'v(x)': np.round(self.v, 14), \
-			'| u(x) - v(x) |': np.round(self.dif, 14)
+			'№ узла': np.arange(self.node), 'x': np.round(self.x, len(str(self.h))), 'u(x)': np.round(self.u, 14), 'v(x)': np.round(self.v, 14), \
+			'|u(x) - v(x)|': np.round(self.dif, 14)
 		})
 
 		# записи

@@ -53,19 +53,19 @@ class PdTable(QWidget):
 		parent.PdTable.horizontalHeader().setStretchLastSection(True)
 
 	def getToolTips(self, parent):
-		# cols = ['n', 'x', 'Ij', 'I2j', 'Ij - I2j', '|ОЛП|', 'Hj', 'C1', 'C2', 'uj', '|uj - Ij|', 'yj']
+		# cols = ['n', 'x', 'I', 'I2n', 'I - I2n', '|ОЛП|', 'hn', 'C1', 'C2', 'I1', '| I1 - I |', 'I2']
 		parent.PdTable.horizontalHeaderItem(0).setToolTip('Номер шага')
-		parent.PdTable.horizontalHeaderItem(1).setToolTip('Координата x<sub>j</sub> приближенной траектории с текущим шагом')
-		parent.PdTable.horizontalHeaderItem(2).setToolTip('Координата v<sub>j</sub> приближенной траектории с текущим шагом')
-		parent.PdTable.horizontalHeaderItem(3).setToolTip('Координата v<sub>2j</sub> приближенной траектории с половинным шагом')
-		parent.PdTable.horizontalHeaderItem(4).setToolTip('Разница координат с текущим шагом v<sub>j</sub> и с половинным шагом v<sub>2j</sub>')
+		parent.PdTable.horizontalHeaderItem(1).setToolTip('Координата x<sub>n</sub> приближенной траектории с текущим шагом')
+		parent.PdTable.horizontalHeaderItem(2).setToolTip('Координата I<sub>n</sub> приближенной траектории с текущим шагом')
+		parent.PdTable.horizontalHeaderItem(3).setToolTip('Координата I<sub>2n</sub> приближенной траектории с половинным шагом')
+		parent.PdTable.horizontalHeaderItem(4).setToolTip('Разница координат с текущим шагом I<sub>n</sub> и с половинным шагом I<sub>2n</sub>')
 		parent.PdTable.horizontalHeaderItem(5).setToolTip('Модуль оценки локальной погрешности')
 		parent.PdTable.horizontalHeaderItem(6).setToolTip('Шаг интегрирования')
 		parent.PdTable.horizontalHeaderItem(7).setToolTip('Счетчик удвоений шага')
 		parent.PdTable.horizontalHeaderItem(8).setToolTip('Счетчик деления шага')
-		parent.PdTable.horizontalHeaderItem(9).setToolTip('Координата u<sub>j</sub> точной траектории')
+		parent.PdTable.horizontalHeaderItem(9).setToolTip('Координата I1<sub>n</sub> точной траектории для переменного тока')
 		parent.PdTable.horizontalHeaderItem(10).setToolTip('Разница между точным и численным решением')
-		parent.PdTable.horizontalHeaderItem(11).setToolTip('Процесс установления тока в цепи с самоиндукцией')
+		parent.PdTable.horizontalHeaderItem(11).setToolTip('координата I2<sub>n</sub> точной траектории для тока в цепи с самоиндукцией')
 
 	# Добавление стилей
 	def getStyle(self, parent):
@@ -104,13 +104,3 @@ class WinDescr(QWidget):
 
 		hbox.addWidget(lab)
 		self.setLayout(hbox)
-
-
-| Задача | Решение | Авторы решения | Примечание |
-|---| ----- | -------- |-----|
-|1ая лабораторная| [C++](./numeric/numeric-method/Первая лабораторная/Тестовая и основная задача/ZedGraph)| Игорь Сумин |Тестовая и основная задача. Лабораторная работа|
-|9 задача| [Python](./numeric/numeric-method/Девятая задача)| Валерия Алексеева / Игорь Сумин | ... . Практическая работа |
-|11 задача| *В процессе* | Никита Мешалкин | ... . Практическая работа |
-|Жесткая система ОДУ| [Python](./numeric/numeric-method/Жесткая система ОДУ)| Ксения Белова / Игорь Сумин | ... . Практическая работа |
-|2ая лабораторная| [Python](./numeric/numeric-method/Вторая лабораторная/Тестовая и основная задача)| Валерия Алексеева / Игорь Сумин |Тестовая и основная задача. Лабораторная работа|
-|3я лабораторная| *В процессе* | Дмитрий Сиротин | ... . Лабораторная работа |

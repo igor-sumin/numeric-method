@@ -12,15 +12,12 @@ import pandas as pd
 
 # Таблица приложения
 class PdTable(QWidget):
-	def __init__(self, parent, data, lays=None):
+	def __init__(self, parent, data, flag, params):
 		super().__init__()
 
 		self._data = data
-
-		if lays:
-			self._lays = int(lays)
-		else:
-			self._lays = False
+		self._flag = flag
+		self._lays = params
 
 		self.initUI(parent)
 
@@ -38,15 +35,18 @@ class PdTable(QWidget):
 		parent.PdTable.setColumnCount(cols)
 		parent.PdTable.setHorizontalHeaderLabels(self._data.columns)
 
-		if self._lays:
-			j = 0
-			temp = [''] * rows
-			temp[0] = 'Слой 0'
-			for i in range(0, rows, self._lays + 1):
-				temp[i] = 'Слой ' + str(j)
-				j += 1
+		temp = [''] * rows
+		j = 0
+		for i in range(0, rows, self._lays[1] + 1):
+			temp[i] = 'Слой ' + str(j)
+			j += 1
 
-			parent.PdTable.setVerticalHeaderLabels(temp)
+		# вызуил для предпослденего и послденего слоев
+		temp[-self._lays[1] - 1] = 'Слой ' + str(self._lays[2])
+		temp[(-self._lays[1] - 1) * 2] = 'Слой ' + str(self._lays[2] - 1)
+
+
+		parent.PdTable.setVerticalHeaderLabels(temp)
 
 		# data insertion
 		for i in range(parent.PdTable.rowCount()):
@@ -66,10 +66,10 @@ class PdTable(QWidget):
 	def getToolTips(self, parent):
 		# cols = ['№ Слоя', 'tj', 'i', 'xi', 'vij']
 
-		parent.PdTable.horizontalHeaderItem(0).setToolTip('Координата t<sub>j</sub> на каждом слое')
-		parent.PdTable.horizontalHeaderItem(1).setToolTip('Номер координаты')
-		parent.PdTable.horizontalHeaderItem(2).setToolTip('Координата x<sub>i</sub> на каждом слое')
-		parent.PdTable.horizontalHeaderItem(3).setToolTip('Координата численного решения в узле (i, j)')
+		parent.PdTable.horizontalHeaderItem(0).setToolTip('Координата времени на каждом слое')
+		parent.PdTable.horizontalHeaderItem(1).setToolTip('Номер координаты по пространству')
+		parent.PdTable.horizontalHeaderItem(2).setToolTip('Координата пространства на каждом слое')
+		parent.PdTable.horizontalHeaderItem(3).setToolTip('Координата точного решения неявной схемы в узле (i, j)')
 
 	# Добавление стилей
 	def getStyle(self, parent):
@@ -87,10 +87,7 @@ class PdTable(QWidget):
 		"""
 
 		parent.PdTable.setStyleSheet(style)
-		if self._lays:
-			parent.PdTable.verticalHeader().setVisible(True)
-		else:
-			parent.PdTable.verticalHeader().setVisible(False)
+		parent.PdTable.verticalHeader().setVisible(True)
 
 		header = parent.PdTable.horizontalHeader()
 		vertical = parent.PdTable.verticalHeader()
